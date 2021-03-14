@@ -1,65 +1,89 @@
+import { useState } from "react";
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 
-export default function Home() {
+export default function Home({envJSON}) {
+  const [envData, setEnvData] = useState(envJSON); 
+  const [repoName, setRepoName] = useState('');
+  const [environment, setEnvironment] = useState('');
+  const [fileName, setFileName] = useState('.env');
+
+  const updateEnvKey = ({currentKey, newKey}) => {
+    setEnvData(envJSON => {
+      const currentValue = envJSON[currentKey];
+      const updatedData = {...envJSON};
+      delete updatedData[currentKey];
+      updatedData[newKey] = currentValue;
+      return updatedData;
+    })
+  }
+
+  const updateEnvValue = ({key, value}) => {
+    setEnvData(envJSON => {
+      return {...envJSON, [key]: value} 
+    })
+  };
+
+  const fetchData = async () => {
+    const data = await fetch(`http://localhost:3000/api/download?environment=${environment}&repoName=${repoName}&fileName=${fileName}`).then(res => res.json());
+    setEnvData(data);
+  }
+
+  const uploadData = async () => {
+    const content = JSON.stringify(envData);
+    const keyName = `${environment}/${repoName}/${fileName}`;
+    console.log("keyName", keyName)
+    const data = await fetch(`http://localhost:3000/api/upload?content=${content}&fileName=${keyName}`).then(res => res.json());
+    console.log("data", data)
+  }
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>Env Editor</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+      <div className="">
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+        <div className={styles.form}>
+          <input name="environment" value={environment} onChange={(e) => setEnvironment(e.target.value)} />
+          <input name="repoName" value={repoName} onChange={(e) => setRepoName(e.target.value)} />
+          <input name="fileName" value={fileName} onChange={(e) => setFileName(e.target.value)} />
+          <button onClick={fetchData}>Fetch Data</button>
         </div>
-      </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+        {Object.entries(envData).map(([key, value], i) => {
+          return (
+            <div key={key}>
+              <div>
+
+                <input className={styles.input} name={`${key}-${i}`} value={key} onChange={(e) => {
+                 updateEnvKey({currentKey: key, newKey: e.target.value });
+                }} />
+
+                <input className={styles.input} name={`${value}-${i}`} value={value} onChange={(e) => {
+                  updateEnvValue({ key, value: e.target.value});
+                }} />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <button onClick={uploadData}>Upload</button>
+
     </div>
   )
+}
+
+
+export async function getServerSideProps(context) {
+  const data = await fetch('http://localhost:3000/api/download?environment=staging&repoName=yc-gateway&fileName=.env').then(res => res.json());
+  return {
+    props: {
+      envJSON: data
+    }
+  }
 }
