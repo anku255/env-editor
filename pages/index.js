@@ -1,89 +1,217 @@
 import { useState } from "react";
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import Head from "next/head";
+import absoluteUrl from "next-absolute-url";
+import {
+  Input,
+  Box,
+  IconButton,
+  Select,
+  Button,
+  Container,
+} from "@chakra-ui/react";
+import { DeleteIcon } from "@chakra-ui/icons";
 
-export default function Home({envJSON}) {
-  const [envData, setEnvData] = useState(envJSON); 
-  const [repoName, setRepoName] = useState('');
-  const [environment, setEnvironment] = useState('');
-  const [fileName, setFileName] = useState('.env');
+const repos = [
+  "yc-frontend",
+  "yc-gateway",
+  "yc-biz-logic",
+  "yc-database",
+  "yc-user",
+  "yc-referral",
+  "yc-pigeon",
+  "yc-program",
+  "yc-class",
+  "yc-post",
+  "yc-admin-frontend",
+  "yc-admin-backend",
+];
+const environments = ["develop", "staging"];
 
-  const updateEnvKey = ({currentKey, newKey}) => {
-    setEnvData(envJSON => {
+export default function Home({ envJSON, origin }) {
+  const [envData, setEnvData] = useState(envJSON);
+  const [repoName, setRepoName] = useState("");
+  const [environment, setEnvironment] = useState("");
+  const [fileName, setFileName] = useState(".env");
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  const updateEnvKey = ({ currentKey, newKey }) => {
+    setEnvData((envJSON) => {
       const currentValue = envJSON[currentKey];
-      const updatedData = {...envJSON};
+      const updatedData = { ...envJSON };
       delete updatedData[currentKey];
       updatedData[newKey] = currentValue;
       return updatedData;
-    })
-  }
-
-  const updateEnvValue = ({key, value}) => {
-    setEnvData(envJSON => {
-      return {...envJSON, [key]: value} 
-    })
+    });
   };
 
-  const fetchData = async () => {
-    const data = await fetch(`http://localhost:3000/api/download?environment=${environment}&repoName=${repoName}&fileName=${fileName}`).then(res => res.json());
-    setEnvData(data);
+  const updateEnvValue = ({ key, value }) => {
+    setEnvData((envJSON) => {
+      return { ...envJSON, [key]: value };
+    });
+  };
+
+  const addNewKey = () => {
+    setEnvData((envJSON) => {
+      return { ...envJSON, [newKey]: newValue };
+    });
+    setNewKey('');
+    setNewValue('');
   }
+
+  const deleteKey = ({ key }) => {
+    setEnvData((envJSON) => {
+      const updatedData = { ...envJSON };
+      delete updatedData[key];
+      return updatedData;
+    });
+  }
+
+  const fetchData = async () => {
+    const data = await fetch(
+      `${origin}/api/download?environment=${environment}&repoName=${repoName}&fileName=${fileName}`
+    ).then((res) => res.json());
+    setEnvData(data);
+  };
 
   const uploadData = async () => {
     const content = JSON.stringify(envData);
     const keyName = `${environment}/${repoName}/${fileName}`;
-    console.log("keyName", keyName)
-    const data = await fetch(`http://localhost:3000/api/upload?content=${content}&fileName=${keyName}`).then(res => res.json());
-    console.log("data", data)
-  }
+    const data = await fetch(`${origin}/api/upload`, {
+      method: 'POST',
+      headers: {	'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content,
+        fileName: keyName
+      })
+    }).then((res) => res.json());
+    console.log("data", data);
+  };
 
   return (
-    <div className={styles.container}>
+    <Container minW="max" px="8" py="4">
       <Head>
         <title>Env Editor</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-
       <div className="">
-
-        <div className={styles.form}>
-          <input name="environment" value={environment} onChange={(e) => setEnvironment(e.target.value)} />
-          <input name="repoName" value={repoName} onChange={(e) => setRepoName(e.target.value)} />
-          <input name="fileName" value={fileName} onChange={(e) => setFileName(e.target.value)} />
-          <button onClick={fetchData}>Fetch Data</button>
-        </div>
+        <Box display="flex" alignItems="center" mb="4">
+          <Select
+            placeholder="Environment"
+            value={environment}
+            onChange={(e) => setEnvironment(e.target.value)}
+          >
+            {environments.map((environment) => (
+              <option key={environment} value={environment}>
+                {environment}
+              </option>
+            ))}
+          </Select>
+          <Select
+            placeholder="Repository"
+            value={repoName}
+            onChange={(e) => setRepoName(e.target.value)}
+          >
+            {repos.map((repoName) => (
+              <option key={repoName} value={repoName}>
+                {repoName}
+              </option>
+            ))}
+          </Select>
+          <Input
+            width="xs"
+            name="fileName"
+            value={fileName}
+            onChange={(e) => setFileName(e.target.value)}
+          />
+          <Box pl="4">
+            <Button onClick={fetchData} colorScheme="teal" size="sm">
+              Fetch
+            </Button>
+          </Box>
+        </Box>
 
         {Object.entries(envData).map(([key, value], i) => {
           return (
             <div key={key}>
-              <div>
-
-                <input className={styles.input} name={`${key}-${i}`} value={key} onChange={(e) => {
-                 updateEnvKey({currentKey: key, newKey: e.target.value });
-                }} />
-
-                <input className={styles.input} name={`${value}-${i}`} value={value} onChange={(e) => {
-                  updateEnvValue({ key, value: e.target.value});
-                }} />
-              </div>
+              <Box display="flex" mb="2">
+                <Input
+                  placeholder="Key"
+                  mr="4"
+                  width="md"
+                  name={`${key}-${i}`}
+                  value={key}
+                  disabled
+                  onChange={(e) =>
+                    updateEnvKey({ currentKey: key, newKey: e.target.value })
+                  }
+                />
+                <Input
+                  width="xl"
+                  placeholder="Value"
+                  name={`${value}-${i}`}
+                  value={value}
+                  onChange={(e) =>
+                    updateEnvValue({ key, value: e.target.value })
+                  }
+                />
+                <IconButton
+                  marginLeft="2"
+                  aria-label="Delete Key"
+                  onClick={() => deleteKey({key})}
+                  icon={<DeleteIcon w={4} h={4} color="red.500" />}
+                />
+              </Box>
             </div>
-          )
+          );
         })}
+        <Box display="flex" mb="2">
+          <Input
+            placeholder="KEY"
+            mr="4"
+            width="md"
+            name="newKey"
+            value={newKey}
+            onChange={(e) => setNewKey(e.target.value)}
+          />
+          <Input
+            width="xl"
+            placeholder="VALUE"
+            name="newValue"
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+          />
+          <Button
+            marginLeft="2"
+            aria-label="Add Key"
+            onClick={addNewKey}
+          >
+            Add
+          </Button>
+        </Box>
       </div>
 
-      <button onClick={uploadData}>Upload</button>
-
-    </div>
-  )
+      <Box display="flex" justifyContent="center">
+        <Button onClick={uploadData} colorScheme="blue" size="md">
+          Upload
+        </Button>
+      </Box>
+    </Container>
+  );
 }
 
-
-export async function getServerSideProps(context) {
-  const data = await fetch('http://localhost:3000/api/download?environment=staging&repoName=yc-gateway&fileName=.env').then(res => res.json());
+export async function getServerSideProps({ req, query }) {
+  console.log("query", query)
+  const { host } = absoluteUrl(req);
+  const origin = `http://${host}`;
+  const data = await fetch(
+    `http://${host}/api/download?environment=staging&repoName=yc-gateway&fileName=.env`
+  ).then((res) => res.json());
   return {
     props: {
-      envJSON: data
-    }
-  }
+      envJSON: data,
+      origin,
+    },
+  };
 }

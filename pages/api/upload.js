@@ -1,12 +1,15 @@
 import aws from 'aws-sdk';
 import jsonToEnv from 'json-to-env2';
 
+// const jsonToEnv = (envJSON = {}) => {
+//   return Object.entries(envJSON).map(([key, value]) => `${key}=${value}`).join('\n');
+// }
+
 export default async function handler(req, res) {
 
-  const { fileName, content } = req.query;
+  const { fileName, content } = req.body;
 
   const envString = jsonToEnv(JSON.parse(content));
-
   const buffer = Buffer.from(envString, 'utf8');
 
   aws.config.update({
