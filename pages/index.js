@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import absoluteUrl from "next-absolute-url";
 import {
   Input,
@@ -22,18 +23,50 @@ const repos = [
   "yc-program",
   "yc-class",
   "yc-post",
+  "yc-media",
   "yc-admin-frontend",
   "yc-admin-backend",
 ];
+
 const environments = ["develop", "staging"];
 
-export default function Home({ envJSON, origin }) {
+/**
+ *
+ * @param router Router
+ * @param queryParams
+ * @returns void
+ * Updates the URL with the given query params
+ */
+const updateUrl = (router, queryParams) => {
+  const parsedQueryParams = router.query;
+  const updatedQueryParams = { ...parsedQueryParams, ...queryParams };
+  const { repoName, environment, fileName } = updatedQueryParams;
+  const strignifiedQueryParams = `environment=${environment}&repoName=${repoName}&fileName=${fileName}`;
+  router.replace(`/?${strignifiedQueryParams}`, `/?${strignifiedQueryParams}`, {
+    shallow: true,
+  });
+};
+
+
+const getEnvData = async ({ origin, environment, repoName, fileName }) => {
+  return fetch(
+    `${origin}/api/download?environment=${environment}&repoName=${repoName}&fileName=${fileName}`
+  ).then((res) => res.json());
+}
+
+export default function Home({ envJSON, origin, isRepoSelected }) {
+  const router = useRouter();
+  const { repoName, environment, fileName = '.env' } = router.query;
+
   const [envData, setEnvData] = useState(envJSON);
-  const [repoName, setRepoName] = useState("");
-  const [environment, setEnvironment] = useState("");
-  const [fileName, setFileName] = useState(".env");
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+
+  useEffect(() => {
+    if(!isRepoSelected) {
+      router.push('/?environment=develop&repoName=yc-frontend&fileName=.env');
+    }
+  }, []);
 
   const updateEnvKey = ({ currentKey, newKey }) => {
     setEnvData((envJSON) => {
@@ -55,9 +88,9 @@ export default function Home({ envJSON, origin }) {
     setEnvData((envJSON) => {
       return { ...envJSON, [newKey]: newValue };
     });
-    setNewKey('');
-    setNewValue('');
-  }
+    setNewKey("");
+    setNewValue("");
+  };
 
   const deleteKey = ({ key }) => {
     setEnvData((envJSON) => {
@@ -65,12 +98,10 @@ export default function Home({ envJSON, origin }) {
       delete updatedData[key];
       return updatedData;
     });
-  }
+  };
 
   const fetchData = async () => {
-    const data = await fetch(
-      `${origin}/api/download?environment=${environment}&repoName=${repoName}&fileName=${fileName}`
-    ).then((res) => res.json());
+    const data = await getEnvData({ origin, environment, repoName, fileName });
     setEnvData(data);
   };
 
@@ -78,12 +109,12 @@ export default function Home({ envJSON, origin }) {
     const content = JSON.stringify(envData);
     const keyName = `${environment}/${repoName}/${fileName}`;
     const data = await fetch(`${origin}/api/upload`, {
-      method: 'POST',
-      headers: {	'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content,
-        fileName: keyName
-      })
+        fileName: keyName,
+      }),
     }).then((res) => res.json());
     console.log("data", data);
   };
@@ -100,7 +131,7 @@ export default function Home({ envJSON, origin }) {
           <Select
             placeholder="Environment"
             value={environment}
-            onChange={(e) => setEnvironment(e.target.value)}
+            onChange={(e) => updateUrl(router, { environment: e.target.value })}
           >
             {environments.map((environment) => (
               <option key={environment} value={environment}>
@@ -111,7 +142,7 @@ export default function Home({ envJSON, origin }) {
           <Select
             placeholder="Repository"
             value={repoName}
-            onChange={(e) => setRepoName(e.target.value)}
+            onChange={(e) => updateUrl(router, { repoName: e.target.value })}
           >
             {repos.map((repoName) => (
               <option key={repoName} value={repoName}>
@@ -123,7 +154,7 @@ export default function Home({ envJSON, origin }) {
             width="xs"
             name="fileName"
             value={fileName}
-            onChange={(e) => setFileName(e.target.value)}
+            onChange={(e) => updateUrl(router, { fileName: e.target.value })}
           />
           <Box pl="4">
             <Button onClick={fetchData} colorScheme="teal" size="sm">
@@ -159,7 +190,7 @@ export default function Home({ envJSON, origin }) {
                 <IconButton
                   marginLeft="2"
                   aria-label="Delete Key"
-                  onClick={() => deleteKey({key})}
+                  onClick={() => deleteKey({ key })}
                   icon={<DeleteIcon w={4} h={4} color="red.500" />}
                 />
               </Box>
@@ -182,11 +213,7 @@ export default function Home({ envJSON, origin }) {
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
           />
-          <Button
-            marginLeft="2"
-            aria-label="Add Key"
-            onClick={addNewKey}
-          >
+          <Button marginLeft="2" aria-label="Add Key" onClick={addNewKey}>
             Add
           </Button>
         </Box>
@@ -202,16 +229,22 @@ export default function Home({ envJSON, origin }) {
 }
 
 export async function getServerSideProps({ req, query }) {
-  console.log("query", query)
+  const { repoName, environment, fileName = '.env' } = query;
+  const isRepoSelected = Boolean(repoName && environment);
+  let data = {};
+
   const { host } = absoluteUrl(req);
-  const origin = `http://${host}`;
-  const data = await fetch(
-    `http://${host}/api/download?environment=staging&repoName=yc-gateway&fileName=.env`
-  ).then((res) => res.json());
+  const origin = `https://${host}`;
+
+  if(isRepoSelected) {
+    data = await getEnvData({ origin, environment, repoName, fileName });
+  }
+
   return {
     props: {
       envJSON: data,
       origin,
+      isRepoSelected
     },
   };
 }
