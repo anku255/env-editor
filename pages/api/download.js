@@ -1,5 +1,4 @@
 import aws from 'aws-sdk';
-// import parseEnvString from 'parse-env-string';
 
 function parseEnvString(envString) {
   const lines = envString.split('\n');
@@ -32,11 +31,11 @@ export default async function handler(req, res) {
 
     if (err) {
       console.log("err", err);
-      res.status(500).json("Something went wrong");
+      res.status(500).json({ status: false, message: err.message });
     } else {
       // Read the file
       const contents = fileContents.Body.toString();
-      res.status(200).json(parseEnvString(contents));
+      res.status(200).json({ status: true, data: parseEnvString(contents)});
     }
   });
 }
