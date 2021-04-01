@@ -15,6 +15,7 @@ const repos = [
   "yc-media",
   "yc-admin-frontend",
   "yc-admin-backend",
+  "yc-env-editor"
 ];
 
 
