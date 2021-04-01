@@ -1,8 +1,21 @@
 import aws from "aws-sdk";
 import jsonToEnv from "json-to-env2";
+import { getSession } from "next-auth/client";
+import { isUserAllowed } from "../../src/utils/isUserAllowed";
 
 export default async function handler(req, res) {
-  const { fileName, content } = req.body;
+  const session = await getSession({ req });
+  const { fileName, content, environment } = req.body;
+  const isAllowed = isUserAllowed({ environment, email: session?.user?.email });
+  
+  if (!isAllowed)
+    return res
+      .status(401)
+      .json({
+        status: false,
+        message: `You do not have permission for ${environment}`,
+      });
+
 
   const envString = jsonToEnv(JSON.parse(content));
   const buffer = Buffer.from(envString, "utf8");

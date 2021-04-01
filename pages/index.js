@@ -141,6 +141,7 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
       body: JSON.stringify({
         content,
         fileName: keyName,
+        environment
       }),
     }).then((res) => res.json());
     if(res.status) {
