@@ -1,12 +1,6 @@
 import React from "react";
 import { Box, Heading, Flex, Text, Button } from "@chakra-ui/react";
 
-const MenuItems = ({ children }) => (
-  <Text mt={{ base: 4, md: 0 }} mr={6} display="block">
-    {children}
-  </Text>
-);
-
 export const Header = ({ email, signIn, signOut }) => {
   const [show, setShow] = React.useState(false);
   const handleToggle = () => setShow(!show);
@@ -18,8 +12,8 @@ export const Header = ({ email, signIn, signOut }) => {
       justify="space-between"
       wrap="wrap"
       padding="1.5rem"
-      bg="teal.500"
-      color="white"
+      bg="rgb(254, 220, 77)"
+      color="black"
     >
       <Flex align="center" mr={5}>
         <Heading as="h1" size="lg" letterSpacing={"-.1rem"}>
@@ -38,19 +32,6 @@ export const Header = ({ email, signIn, signOut }) => {
           <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
         </svg>
       </Box>
-
-      {/* <Box
-        display={{ sm: show ? "block" : "none", md: "flex" }}
-        width={{ sm: "full", md: "auto" }}
-        alignItems="center"
-        flexGrow={1}
-      >
-        <MenuItems>Docs</MenuItems>
-        <MenuItems>Examples</MenuItems>
-        <MenuItems>Blog</MenuItems>
-      </Box> */}
-
-      
 
       <Box
         display={{ sm: show ? "flex" : "none", md: "flex" }}
