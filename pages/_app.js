@@ -1,10 +1,13 @@
 import { ChakraProvider } from "@chakra-ui/react";
+import { ToastProvider, useToasts } from "react-toast-notifications";
 import "../styles/globals.css";
 
 function MyApp({ Component, pageProps }) {
   return (
     <ChakraProvider>
-      <Component {...pageProps} />
+      <ToastProvider>
+        <Component {...pageProps} />
+      </ToastProvider>
     </ChakraProvider>
   );
 }

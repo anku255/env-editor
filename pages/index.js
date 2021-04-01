@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import absoluteUrl from "next-absolute-url";
 import { stringify } from 'query-string';
+import { useToasts } from 'react-toast-notifications';
 import { signIn, signOut, getSession } from "next-auth/client";
 import {
   Input,
@@ -67,6 +68,7 @@ const useFetchENVData = ({ origin, environment, repoName, fileName }) => {
 
 export default function Home({ origin, accessLevels, isLoggedIn, user }) {
   const router = useRouter();
+  const { addToast } = useToasts();
   const { repoName, environment, fileName = ".env" } = router.query;
 
   const { isFetching, envData: fetchedEnvData, error } = useFetchENVData({ origin, environment, repoName, fileName });
@@ -81,6 +83,12 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
   useEffect(() => {
     setEnvData(fetchedEnvData);
   }, [fetchedEnvData]);
+
+  useEffect(() => {
+    if(error) {
+      addToast(error, { appearance: 'error' });
+    }
+  }, [error]);
 
   const updateEnvKey = ({ currentKey, newKey }) => {
     setEnvData((envJSON) => {
@@ -116,17 +124,18 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
 
   const fetchData = async () => {
     const res = await getEnvData({ origin, environment, repoName, fileName });
+    console.log("res", res)
     if(res.status) {
       setEnvData(res.data);
     } else {
-      // show error toast
+      addToast(res.message, { appearance: 'error' });
     }
   };
 
   const uploadData = async () => {
     const content = JSON.stringify(envData);
     const keyName = `${environment}/${repoName}/${fileName}`;
-    const data = await fetch(`${origin}/api/upload`, {
+    const res = await fetch(`${origin}/api/upload`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -134,7 +143,11 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
         fileName: keyName,
       }),
     }).then((res) => res.json());
-    console.log("data", data);
+    if(res.status) {
+      addToast(`Successfully uploaded ${keyName}`, { appearance: 'success' });
+    } else {
+      addToast(res.message, { appearance: 'error' });
+    }
   };
 
   if (!isLoggedIn)
