@@ -140,7 +140,8 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         content,
-        fileName: keyName,
+        fileName,
+        repoName,
         environment
       }),
     }).then((res) => res.json());

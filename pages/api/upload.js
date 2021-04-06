@@ -1,5 +1,5 @@
 import aws from "aws-sdk";
-import sha1 from 'sha1';
+import sha1 from "sha1";
 import jsonToEnv from "json-to-env2";
 import { getSession } from "next-auth/client";
 import { isUserAllowed } from "../../src/utils/isUserAllowed";
@@ -21,21 +21,27 @@ async function createUploadLog({
   userEmail,
   oldDocument,
   newDocument,
+  repoName,
+  environment,
+  fileName,
 }) {
   return EnvUpdateLogModel.create({
     userName,
     userEmail,
     oldDocument,
     newDocument,
+    repoName,
+    environment,
+    fileName,
   });
 }
 
-export async function uploadToS3({ s3, fileName, buffer }) {
+export async function uploadToS3({ s3, Key, buffer }) {
   return new Promise((resolve, reject) => {
     s3.putObject(
       {
         Bucket: process.env.BUCKET_NAME,
-        Key: fileName,
+        Key,
         ContentType: "application/x-envoy",
         // ContentType: mimeType || res.headers.get('content-type'),
         // ContentLength: res.headers.get('content-length'),
@@ -55,7 +61,8 @@ export default async function handler(req, res) {
     getSession({ req }),
     createOrReturnDBConnection(),
   ]);
-  const { fileName, content, environment } = req.body;
+  const { content, environment, repoName, fileName } = req.body;
+  const Key = `${environment}/${repoName}/${fileName}`;
   const isAllowed = isUserAllowed({ environment, email: session?.user?.email });
 
   if (!isAllowed)
@@ -79,10 +86,10 @@ export default async function handler(req, res) {
   const oldEnvDataPromise = downloadFromS3({
     s3,
     Bucket: process.env.BUCKET_NAME,
-    Key: fileName,
+    Key,
   });
 
-  const uploadEnvPromise =  uploadToS3({ s3, fileName, buffer });
+  const uploadEnvPromise = uploadToS3({ s3, Key, buffer });
 
   const [{ data: oldDocument }, uploadResponse] = await Promise.all([
     oldEnvDataPromise,
@@ -94,6 +101,9 @@ export default async function handler(req, res) {
     userEmail: session.user.email,
     oldDocument: getSafeEnvString(oldDocument),
     newDocument: getSafeEnvString(JSON.parse(content)),
+    repoName,
+    environment,
+    fileName,
   });
 
   res.status(200).json(uploadResponse);

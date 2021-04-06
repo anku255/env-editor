@@ -4,6 +4,18 @@ const EnvUpdateLogSchema = new Schema({
   userName: {
     type: String,
   },
+  environment: {
+    type: String,
+    required: true,
+  },
+  repoName: {
+    type: String,
+    required: true,
+  },
+  fileName: {
+    type: String,
+    required: true,
+  },
   userEmail: {
     type: String,
     required: true,
