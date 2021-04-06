@@ -16,6 +16,7 @@ import { getAccessLevels } from "../src/utils/getAccessLevels";
 import { OuterContainer } from "../src/components/OuterContainer";
 import { RepoSelectForm } from "../src/components/RepoSelectForm";
 import { AddNewKeyForm } from "../src/components/AddNewKeyForm";
+import { LogsDrawer } from "../src/components/LogsDrawer";
 
 /**
  *
@@ -75,6 +76,7 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
   const [envData, setEnvData] = useState({});
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const email = user?.email;
   const isRepoSelected = Boolean(repoName && environment);
@@ -132,6 +134,9 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
     }
   };
 
+  const openLogsDrawer = () => setIsDrawerOpen(true);
+  const closeLogsDrawer = () => setIsDrawerOpen(false);
+
   const uploadData = async () => {
     const content = JSON.stringify(envData);
     const keyName = `${environment}/${repoName}/${fileName}`;
@@ -171,12 +176,23 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
   return (
     <OuterContainer {...{ email, signIn, signOut }}>
       <Container minW="max" px="8" py="4">
+        <LogsDrawer
+        {...{
+          origin,
+          environment,
+          fileName,
+          repoName,
+          isOpen: isDrawerOpen,
+          onClose: closeLogsDrawer
+        }}
+        />
         <RepoSelectForm
           {...{
             environment,
             fileName,
             repoName,
             fetchData,
+            openLogsDrawer,
             accessLevels,
             updateUrl,
             router,

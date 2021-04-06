@@ -19,7 +19,7 @@ const repos = [
 ];
 
 
-export const RepoSelectForm = ({isRepoSelected, environment, repoName, fileName, fetchData, accessLevels, updateUrl, router }) => (
+export const RepoSelectForm = ({isRepoSelected, environment, repoName, fileName, fetchData, openLogsDrawer, accessLevels, updateUrl, router }) => (
   <>
     <Box display="flex" alignItems="center" mb="4">
       <Select
@@ -50,9 +50,12 @@ export const RepoSelectForm = ({isRepoSelected, environment, repoName, fileName,
         value={fileName}
         onChange={(e) => updateUrl(router, { fileName: e.target.value })}
       />
-      <Box pl="4">
-        <Button disabled={!isRepoSelected} onClick={fetchData} colorScheme="teal" size="sm">
+      <Box display="flex" pl="4">
+        <Button mr="2" disabled={!isRepoSelected} onClick={fetchData} colorScheme="teal" size="sm">
           Fetch
+        </Button>
+        <Button disabled={!isRepoSelected} onClick={openLogsDrawer} colorScheme="purple" size="sm">
+          View Logs
         </Button>
       </Box>
     </Box>
