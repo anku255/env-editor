@@ -12,6 +12,21 @@ function parseEnvString(envString) {
   return data;
 }
 
+export async function downloadFromS3  ({ s3, Bucket, Key  })  {
+  return new Promise((resolve, reject) => {
+    s3.getObject({ Bucket, Key }, function (err, fileContents) {
+      if (err) {
+        console.log("err", err);
+        resolve({ status: false, message: err.message });
+      } else {
+        // Read the file
+        const contents = fileContents.Body.toString();
+        resolve({ status: true, data: parseEnvString(contents) });
+      }
+    });
+  });
+}
+
 export default async function handler(req, res) {
   const session = await getSession({ req });
   const { environment, repoName, fileName } = req.query;
@@ -39,14 +54,11 @@ export default async function handler(req, res) {
     Key: `${environment}/${repoName}/${fileName}`,
   };
 
-  s3.getObject(fileParams, function (err, fileContents) {
-    if (err) {
-      console.log("err", err);
-      res.status(500).json({ status: false, message: err.message });
-    } else {
-      // Read the file
-      const contents = fileContents.Body.toString();
-      res.status(200).json({ status: true, data: parseEnvString(contents) });
-    }
-  });
+  const response = await downloadFromS3({ s3, Bucket: fileParams.Bucket, Key: fileParams.Key });
+
+  if(res.status) {
+    return res.status(200).json(response);
+  }
+
+  return res.status(500).json(response);
 }
