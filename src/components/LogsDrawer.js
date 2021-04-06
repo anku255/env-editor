@@ -2,22 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useToasts } from "react-toast-notifications";
 import formatDate from "date-fns/format";
 import {
-  Input,
   Box,
-  IconButton,
-  Button,
-  Container,
-  Heading,
   Stack,
   Text,
   Drawer,
   DrawerBody,
-  DrawerFooter,
+  useDisclosure,
   DrawerHeader,
   DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
 } from "@chakra-ui/react";
+import { LogDiffModal } from "./LogDiffModal";
 
 const getEnvLogs = async ({ origin, environment, repoName, fileName }) => {
   return fetch(
@@ -60,17 +56,21 @@ const useFetchEnvLogs = ({
 };
 
 function LogCard({ log }) {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const { userName, createdAt } = log;
   return (
-    <Box p={3} shadow="md" borderWidth="1px">
-      <Text fontSize="md">
-        Updated By{" "}
-        <Text display="inline-block" fontWeight="bold">
-          {userName}
-        </Text>{" "}
-        at {formatDate(new Date(createdAt), "p do MMM Y")}
-      </Text>
-    </Box>
+    <>
+      <Box p={3} shadow="md" borderWidth="1px" onClick={onOpen}>
+        <Text fontSize="md">
+          Updated By{" "}
+          <Text display="inline-block" fontWeight="bold">
+            {userName}
+          </Text>{" "}
+          at {formatDate(new Date(createdAt), "p do MMM Y")}
+        </Text>
+      </Box>
+      <LogDiffModal {...{ isOpen, onClose, log }} />
+    </>
   );
 }
 

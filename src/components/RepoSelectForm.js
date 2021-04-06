@@ -50,7 +50,7 @@ export const RepoSelectForm = ({isRepoSelected, environment, repoName, fileName,
         value={fileName}
         onChange={(e) => updateUrl(router, { fileName: e.target.value })}
       />
-      <Box display="flex" pl="4">
+      <Box display="flex" pl="16">
         <Button mr="2" disabled={!isRepoSelected} onClick={fetchData} colorScheme="teal" size="sm">
           Fetch
         </Button>
