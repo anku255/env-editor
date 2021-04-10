@@ -6,6 +6,7 @@ import {
   Stack,
   Text,
   Drawer,
+  Tooltip,
   DrawerBody,
   useDisclosure,
   DrawerHeader,
@@ -58,17 +59,21 @@ const useFetchEnvLogs = ({
 function LogCard({ log }) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { userName, createdAt } = log;
+
   return (
     <>
-      <Box p={3} shadow="md" borderWidth="1px" onClick={onOpen}>
-        <Text fontSize="md">
-          Updated By{" "}
-          <Text display="inline-block" fontWeight="bold">
-            {userName}
-          </Text>{" "}
-          at {formatDate(new Date(createdAt), "p do MMM Y")}
-        </Text>
-      </Box>
+      <Tooltip label="Click to view diff" aria-label="Click to view diff">
+        <Box p={3} shadow="md" borderWidth="1px" onClick={onOpen} cursor="pointer">
+          <Text fontSize="md">
+            Updated By{" "}
+            <Text display="inline-block" fontWeight="bold">
+              {userName}
+            </Text>{" "}
+            at {formatDate(new Date(createdAt), "p do MMM Y")}
+          </Text>
+        </Box>
+      </Tooltip>
+
       <LogDiffModal {...{ isOpen, onClose, log }} />
     </>
   );
