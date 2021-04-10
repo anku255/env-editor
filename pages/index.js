@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import jsonToEnv from "json-to-env2";
 import absoluteUrl from "next-absolute-url";
 import { stringify } from 'query-string';
 import { useToasts } from 'react-toast-notifications';
@@ -40,6 +41,30 @@ const getEnvData = async ({ origin, environment, repoName, fileName }) => {
     `${origin}/api/download?environment=${environment}&repoName=${repoName}&fileName=${fileName}`
   ).then((res) => res.json());
 };
+
+const copyEnvToClipboard = ({ envData, addToast }) => {
+  const envString = jsonToEnv(envData);
+  const el = document.createElement('textarea');
+  el.value = envString;
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  addToast('Copied to clipboard!', { appearance: 'success' });
+}
+
+const downloadEnvFile = ({ fileName, envData }) =>{
+  const envString = jsonToEnv(envData);
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(envString));
+  element.setAttribute('download', fileName);
+
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+}
+
 
 const useFetchENVData = ({ origin, environment, repoName, fileName }) => {
   const [isFetching, setIsFetching] = useState(false);
@@ -124,16 +149,6 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
     });
   };
 
-  const fetchData = async () => {
-    const res = await getEnvData({ origin, environment, repoName, fileName });
-    console.log("res", res)
-    if(res.status) {
-      setEnvData(res.data);
-    } else {
-      addToast(res.message, { appearance: 'error' });
-    }
-  };
-
   const openLogsDrawer = () => setIsDrawerOpen(true);
   const closeLogsDrawer = () => setIsDrawerOpen(false);
 
@@ -175,7 +190,7 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
 
   return (
     <OuterContainer {...{ email, signIn, signOut }}>
-      <Container minW="max" px="8" py="4">
+      <Container minW="container.lg" px="8" py="4">
         <LogsDrawer
         {...{
           origin,
@@ -191,7 +206,8 @@ export default function Home({ origin, accessLevels, isLoggedIn, user }) {
             environment,
             fileName,
             repoName,
-            fetchData,
+            copyEnvToClipboard: () => copyEnvToClipboard({ envData, addToast }),
+            downloadEnvFile: () => downloadEnvFile({ envData, fileName: `${repoName}-${environment}${fileName}` }),
             openLogsDrawer,
             accessLevels,
             updateUrl,
