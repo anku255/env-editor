@@ -12,11 +12,13 @@
     "@chakra-ui/react": "^1.4.2",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
+    "@octokit/core": "^3.4.0",
     "aws-sdk": "^2.863.0",
     "date-fns": "^2.19.0",
     "env-parser": "^1.0.1",
     "framer-motion": "^4",
     "json-to-env2": "^1.1.1",
+    "jsonexport": "^3.2.0",
     "mongodb": "^3.6.5",
     "mongoose": "^5.12.3",
     "next": "10.0.8",
@@ -28,6 +30,7 @@
     "react-diff-viewer": "^3.1.1",
     "react-dom": "17.0.1",
     "react-toast-notifications": "^2.4.3",
+    "react-use": "^17.2.3",
     "sha1": "^1.1.1"
   }
 }
