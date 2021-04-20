@@ -17,17 +17,22 @@ async function getPullRequest({ base, head, repo }) {
 }
 
 async function createPullRequest({ base, head, repo, title, description }) {
-  const res = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
-    owner,
-    repo,
-    head,
-    base,
-    title,
-    description
-  });
-  if (res.status !== 201) return null;
-  const pr = res.data;
-  return { pullNo: pr.number, HTMLUrl: pr.html_url };
+  try {
+    const res = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
+      owner,
+      repo,
+      head,
+      base,
+      title,
+      description
+    });
+    if (res.status !== 201) return null;
+    const pr = res.data;
+    return { pullNo: pr.number, HTMLUrl: pr.html_url };
+  } catch (error) {
+    console.log("error", error);
+    return null;
+  }
 }
 
 async function createOrReturnPullRequest({ base, head, repo, title, description }) {
