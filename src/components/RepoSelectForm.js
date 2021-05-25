@@ -10,7 +10,7 @@ const repos = [
   "yc-user",
   "yc-referral",
   "yc-pigeon",
-  "yc-program",
+  "yc-chat",
   "yc-class",
   "yc-post",
   "yc-media",
