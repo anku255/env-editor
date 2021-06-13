@@ -17,6 +17,7 @@ const repos = [
   "yc-admin-frontend",
   "yc-admin-backend",
   "yc-env-editor",
+  "yc-short"
 ];
 
 const IconWithTooltip = ({
