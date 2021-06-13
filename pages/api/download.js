@@ -5,7 +5,8 @@ import { isUserAllowed } from "../../src/utils/isUserAllowed";
 function parseEnvString(envString) {
   const lines = envString.split("\n");
   const data = lines.filter(Boolean).reduce((acc, curr) => {
-    const [key, value] = curr.split("=");
+    const [key] = curr.split("=");
+    const value = curr.replace(`${key}=`, '');
     acc[key] = (value || "").replace(/\'/g, "");
     return acc;
   }, {});
