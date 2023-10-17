@@ -14,3 +14,7 @@ $ cd env-editor
 $ yarn install
 $ yarn dev
 ```
+
+## Screenshots
+
+<img width="1509" alt="image" src="https://github.com/anku255/env-editor/assets/22813027/f21871f1-c0f5-4e6f-9086-def5192f821e">
